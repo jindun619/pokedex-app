@@ -1,105 +1,28 @@
 import {useState, useEffect, useMemo} from 'react';
-import {Dimensions} from 'react-native';
+import {Dimensions, FlatList as RNFlatList} from 'react-native';
 import {useQueries} from '@tanstack/react-query';
 import styled from 'styled-components/native';
 
-import {fetchPokemon, fetchPokemonSpecies} from '../fetcher/fetcher';
-import {translate} from '../utils/utils';
+import {PokemonCardProps} from '../types';
 
-const SCREEN_WIDTH = Dimensions.get('window').width;
+import {PokemonCard} from '../components/PokemonCard';
+import {fetchPokemon, fetchPokemonSpecies} from '../fetcher/fetcher';
+
+const {width: SCREEN_WIDTH} = Dimensions.get('screen');
 
 const Container = styled.View`
   flex: 1;
   justify-content: center;
   align-items: center;
+  background-color: ${props => props.theme.color.mainBg};
 `;
 
 const FlatList = styled.FlatList`
   width: ${SCREEN_WIDTH};
-`;
-
-const Card = styled.TouchableOpacity`
-  border: 1px solid black;
-  width: ${SCREEN_WIDTH - 30}px;
-  margin: 15px 15px 0 15px;
-  padding: 15px;
-  border-radius: 30px;
-`;
-
-const Text = styled.Text`
-  font-size: 20px;
-  color: black;
-`;
-
-const Index = styled.Text`
-  font-size: 20px;
-  font-style: italic;
-`;
-
-const NameText = styled.Text`
-  font-size: 30px;
-  font-weight: 600;
-  text-align: center;
-  margin-bottom: 10px;
-`;
-
-const ImageWrapper = styled.View`
-  align-items: center;
-`;
-const Image = styled.Image`
-  width: 200px;
-  height: 200px;
-`;
-
-const TypesContainer = styled.View`
-  flex-direction: row;
-  flex-wrap: wrap;
-`;
-
-const TypeBadge = styled.View`
-  width: 100px;
-  margin-right: 10px;
-  border-radius: 7px;
-  background-color: blue;
-`;
-
-const TypeText = styled.Text`
-  text-align: center;
-  font-size: 20px;
-  padding: 10px;
-  color: white;
-`;
-
-interface PokemonCardProps {
-  id: number;
-  image: string;
-  name: string;
-  types: string[];
-}
-
-const PokemonCard = ({id, image, name, types}: PokemonCardProps) => {
-  return (
-    <Card>
-      <Index>#{id}</Index>
-      <ImageWrapper>
-        <Image source={{uri: image}} />
-      </ImageWrapper>
-      <NameText>{name}</NameText>
-      <TypesContainer>
-        {types.map((type: any) => (
-          <TypeBadge>
-            <TypeText key={type}>{translate.type(type)}</TypeText>
-            <TypeText key={type + 1}>{translate.type(type)}</TypeText>
-            <TypeText key={type + 2}>{translate.type(type)}</TypeText>
-          </TypeBadge>
-        ))}
-      </TypesContainer>
-    </Card>
-  );
-};
+` as unknown as typeof RNFlatList;
 
 const Home = () => {
-  const [totalData, setTotalData] = useState<any[]>([]);
+  const [totalData, setTotalData] = useState<PokemonCardProps[]>([]);
 
   const ids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
   const pokemonData = useQueries({
@@ -126,7 +49,7 @@ const Home = () => {
 
   useEffect(() => {
     if (!pokemonDataLoading && !pokemonSpeciesDataLoading) {
-      const arr: any[] = [];
+      const arr: PokemonCardProps[] = [];
       pokemonData.forEach((pokemonQuery, index) => {
         const speciesQuery = pokemonSpeciesData[index];
         if ((pokemonQuery.data, speciesQuery.data)) {
@@ -151,7 +74,8 @@ const Home = () => {
     <Container>
       <FlatList
         data={totalData}
-        renderItem={({item}: any) => (
+        keyExtractor={(item: PokemonCardProps) => item.id.toString()}
+        renderItem={({item}: {item: PokemonCardProps}) => (
           <PokemonCard
             id={item.id}
             name={item.name}
@@ -159,7 +83,7 @@ const Home = () => {
             types={item.types}
           />
         )}
-        contentContainerStyle={{alignItems: 'center'}}
+        contentContainerStyle={{alignItems: 'center', marginTop: 20}}
       />
     </Container>
   );
