@@ -3,7 +3,12 @@ import {createStackNavigator} from '@react-navigation/stack';
 import {Tabs} from './Tabs';
 import Detail from '../screen/Detail';
 
-const Stack = createStackNavigator();
+export type RootNavParamList = {
+  Tab: undefined;
+  Detail: {id: number};
+};
+
+const Stack = createStackNavigator<RootNavParamList>();
 
 function RootNav() {
   return (

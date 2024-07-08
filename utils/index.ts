@@ -51,8 +51,18 @@ const translate = {
 };
 
 const convert = {
-  typeColor: (typeName: keyof typeof typeColors): string => {
-    return typeColors[typeName] || '#000000';
+  typeColor: (typeName: string): string => {
+    if (typeColors.hasOwnProperty(typeName)) {
+      return typeColors[typeName as keyof typeof typeColors];
+    } else {
+      return '#000000';
+    }
+  },
+  hexToRgba: (hex: string, transparency: number) => {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r}, ${g}, ${b}, ${transparency})`;
   },
 };
 

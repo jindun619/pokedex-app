@@ -2,7 +2,11 @@ import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 
 import Home from '../screen/Home';
 
-const Tab = createBottomTabNavigator();
+type TabsParamList = {
+  Home: undefined;
+};
+
+const Tab = createBottomTabNavigator<TabsParamList>();
 
 function Tabs() {
   return (

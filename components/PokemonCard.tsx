@@ -2,15 +2,23 @@ import {Dimensions} from 'react-native';
 
 import styled from 'styled-components/native';
 import {useNavigation} from '@react-navigation/native';
+import {StackNavigationProp} from '@react-navigation/stack';
 
 import {PokemonCardProps} from '../types';
+import {RootNavParamList} from '../navigation/RootNav';
 
-import {translate, convert} from '../utils/utils';
+import {TypeBadge} from './TypeBadge';
+
+import {translate, convert} from '../utils';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 
-const Card = styled.TouchableOpacity`
-  background-color: ${props => props.theme.color.secondBg};
+interface CardProps {
+  color: string;
+}
+const Card = styled.TouchableOpacity<CardProps>`
+  background-color: ${props =>
+    convert.hexToRgba(props.color || '#000000', 0.2)};
   width: ${SCREEN_WIDTH - 30}px;
   margin: 15px 15px 0 15px;
   padding: 15px;
@@ -18,13 +26,13 @@ const Card = styled.TouchableOpacity`
 `;
 
 const Index = styled.Text`
-  color: ${props => props.theme.color.text};
+  color: ${props => props.theme.neutral};
   font-size: 20px;
   font-style: italic;
 `;
 
 const NameText = styled.Text`
-  color: ${props => props.theme.color.text};
+  color: ${props => props.theme.text};
   font-size: 30px;
   font-weight: 600;
   text-align: center;
@@ -40,30 +48,21 @@ const Image = styled.Image`
 `;
 
 const TypesContainer = styled.View`
-  flex-wrap: wrap;
   flex-direction: row;
 `;
 
-const TypeBadge = styled.View<{color: string}>`
-  width: 90px;
-  margin-right: 5px;
-  margin-bottom: 5px;
-  border-radius: 7px;
-  background-color: ${props => props.color};
-`;
-
-const TypeText = styled.Text`
-  text-align: center;
-  font-size: 20px;
-  padding: 10px;
-  color: white;
-`;
+type DetailScreenNavigationProp = StackNavigationProp<
+  RootNavParamList,
+  'Detail'
+>;
 
 const PokemonCard = ({id, image, name, types}: PokemonCardProps) => {
-  const navigation = useNavigation();
+  const navigation = useNavigation<DetailScreenNavigationProp>();
 
   return (
-    <Card onPress={() => navigation.navigate('Detail', {abc: 'hi'})}>
+    <Card
+      onPress={() => navigation.navigate('Detail', {id: 1})}
+      color={convert.typeColor(types[0])}>
       <Index>#{id}</Index>
       <ImageWrapper>
         <Image source={{uri: image}} />
@@ -71,9 +70,11 @@ const PokemonCard = ({id, image, name, types}: PokemonCardProps) => {
       <NameText>{name}</NameText>
       <TypesContainer>
         {types.map((type: any) => (
-          <TypeBadge color={convert.typeColor(type)}>
-            <TypeText key={type}>{translate.type(type)}</TypeText>
-          </TypeBadge>
+          <TypeBadge
+            key={type}
+            name={translate.type(type) || ''}
+            color={convert.typeColor(type)}
+          />
         ))}
       </TypesContainer>
     </Card>
