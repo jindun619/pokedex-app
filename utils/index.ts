@@ -21,6 +21,15 @@ const types: {[key: string]: string} = {
   shadow: '다크',
 };
 
+const stats = {
+  hp: 'HP',
+  attack: '공격',
+  defense: '방어',
+  'special-attack': '특수공격',
+  'special-defense': '특수방어',
+  speed: '스피드',
+};
+
 const typeColors = {
   normal: '#A8A77A',
   fighting: '#C22E28',
@@ -47,6 +56,9 @@ const typeColors = {
 const translate = {
   type: (en: keyof typeof types): string | undefined => {
     return types[en];
+  },
+  stat: (en: keyof typeof stats): string | undefined => {
+    return stats[en];
   },
 };
 

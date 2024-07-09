@@ -1,14 +1,21 @@
+import {useState, useEffect} from 'react';
+
 import {Dimensions} from 'react-native';
 
 import styled from 'styled-components/native';
 import {useQuery} from '@tanstack/react-query';
 
 import {RouteProp} from '@react-navigation/native';
+import Icon from 'react-native-vector-icons/FontAwesome5';
+
+import {Block} from '../components/Block';
+import {ColorBlock} from '../components/ColorBlock';
+import {Stats} from '../components/Stats';
 
 import {RootNavParamList} from '../navigation/RootNav';
-
-import {convert} from '../utils';
-import {fetchPokemon, fetchPokemonSpecies} from '../fetcher/fetcher';
+import {convert, translate} from '../utils';
+import {fetchPokemon, fetchSpecies} from '../fetcher/fetcher';
+import {StatsItemProps} from '../types';
 
 import {TypeBadge} from '../components/TypeBadge';
 
@@ -36,67 +43,58 @@ const NameText = styled.Text`
   font-weight: 600;
   text-align: center;
 `;
+
 const IndexText = styled.Text`
+  margin-top: 5px;
   color: ${props => props.theme.neutral};
   font-size: 20px;
   font-weight: 500;
   text-align: center;
 `;
+
 const ImageContainer = styled.View`
   align-items: center;
 `;
+
 const Image = styled.Image`
   width: 250px;
   height: 250px;
 `;
 
-const BlockName = styled.Text`
-  color: ${props => props.theme.text};
-  font-size: 25px;
-  font-weight: 600;
-  margin-bottom: 10px;
-`;
-
-const Block = styled.View`
-  border-radius: 10px;
-  margin-bottom: 10px;
-`;
-
-interface ColorBlockProps {
-  color?: string;
-}
-const ColorBlock = styled.View<ColorBlockProps>`
-  background-color: ${props =>
-    convert.hexToRgba(props.color || '#000000', 0.3)};
-  border-radius: 10px;
-  margin-bottom: 10px;
-`;
-
-const TypesContainer = styled.View``;
-
-const StatsContainer = styled.View`
-  flex-wrap: wrap;
+const FlavorTextContainer = styled.View`
   flex-direction: row;
-  padding: 20px;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 20px;
+  margin-bottom: 30px;
 `;
 
-const Stat = styled.View`
-  width: 50%;
-  margin-bottom: 20px;
-`;
-
-const StatName = styled.Text`
-  color: ${props => props.theme.text};
-  font-size: 15px;
-  font-weight: 500;
-  margin-bottom: 5px;
-`;
-
-const StatValue = styled.Text`
+const FlavorText = styled.Text`
   color: ${props => props.theme.text};
   font-size: 20px;
-  font-weight: 500;
+  padding-left: 10px;
+  padding-right: 10px;
 `;
+
+const ReloadBtn = styled.TouchableOpacity``;
+
+const ReloadIcon = styled(Icon)`
+  color: ${props => props.theme.text};
+`;
+
+const TypesContainer = styled.View`
+  flex-direction: row;
+`;
+
+interface DetailDataProps {
+  name: string;
+  id: string;
+  defaultImage: string;
+  flavorTexts: string[];
+  types: string[];
+  specs: StatsItemProps[];
+  stats: StatsItemProps[];
+}
 
 type DetailScreenRouteProp = RouteProp<RootNavParamList, 'Detail'>;
 
@@ -104,6 +102,14 @@ interface DetailProps {
   route: DetailScreenRouteProp;
 }
 const Detail = ({route}: DetailProps) => {
+  const [detailData, setDetailData] = useState<DetailDataProps>();
+  const [flavorTextIndex, setFlavorTextIndex] = useState<number>(0);
+
+  const setNewIndex = (num: number) => {
+    const newIndex = Math.floor(Math.random() * num);
+    setFlavorTextIndex(newIndex);
+  };
+
   const {id} = route.params;
   const {
     data: pokemonData,
@@ -114,52 +120,78 @@ const Detail = ({route}: DetailProps) => {
     queryFn: () => fetchPokemon(id),
   });
   const {
-    data: pokemonSpeciesData,
-    isLoading: pokemonSpeciesLoading,
-    error: pokemonSpeciesError,
+    data: speciesData,
+    isLoading: speciesLoading,
+    error: speciesError,
   } = useQuery({
-    queryKey: ['pokemonSpecies', 'detail', id],
-    queryFn: () => fetchPokemon(id),
+    queryKey: ['species', 'detail', id],
+    queryFn: () => fetchSpecies(id),
   });
 
-  return (
-    <Container color={convert.typeColor('grass')}>
-      <ScrollView>
-        <NameText>Name</NameText>
-        <IndexText>0001번째 포켓몬</IndexText>
-        <ImageContainer>
-          <Image
-            source={{
-              uri: 'https://www.pokemon.com/static-assets/content-assets/cms2/img/pokedex/full/002.png',
-            }}
-          />
-        </ImageContainer>
-        <BlockName>타입</BlockName>
-        <Block>
-          <TypesContainer>
-            <TypeBadge name="type" color="green" />
-          </TypesContainer>
-        </Block>
-        <BlockName>스탯</BlockName>
-        <ColorBlock color={convert.typeColor('grass')}>
-          <StatsContainer>
-            <Stat>
-              <StatName>신장</StatName>
-              <StatValue>1.8m</StatValue>
-            </Stat>
-            <Stat>
-              <StatName>신장</StatName>
-              <StatValue>1.8m</StatValue>
-            </Stat>
-            <Stat>
-              <StatName>신장</StatName>
-              <StatValue>1.8m</StatValue>
-            </Stat>
-          </StatsContainer>
-        </ColorBlock>
-      </ScrollView>
-    </Container>
-  );
+  useEffect(() => {
+    if (!pokemonLoading && !speciesLoading) {
+      const obj = {
+        name: speciesData.names.find((name: any) => name.language.name === 'ko')
+          .name,
+        id: pokemonData.id,
+        defaultImage: pokemonData.sprites.front_default,
+        flavorTexts: speciesData.flavor_text_entries
+          .filter((item: any) => item.language.name === 'ko')
+          .map((item: any) => item.flavor_text),
+        types: pokemonData.types.map((item: any) => item.type.name),
+        specs: [
+          {name: '신장', value: pokemonData.height},
+          {name: '체중', value: pokemonData.weight},
+        ],
+        stats: pokemonData.stats.map((item: any) => {
+          return {
+            name: translate.stat(item.stat.name),
+            value: item.base_stat,
+          };
+        }),
+      };
+      setDetailData(obj);
+    }
+  }, [pokemonLoading, speciesLoading]);
+
+  if (detailData) {
+    console.log(detailData);
+    return (
+      <Container color={convert.typeColor(detailData.types[0])}>
+        <ScrollView>
+          <NameText>{detailData.name}</NameText>
+          <IndexText>{detailData.id}번째 포켓몬</IndexText>
+          <ImageContainer>
+            <Image
+              source={{
+                uri: detailData.defaultImage,
+              }}
+            />
+          </ImageContainer>
+          <FlavorTextContainer>
+            <FlavorText>{detailData.flavorTexts[flavorTextIndex]}</FlavorText>
+            <ReloadBtn
+              onPress={() => setNewIndex(detailData.flavorTexts.length)}>
+              <ReloadIcon name="redo-alt" size={24} />
+            </ReloadBtn>
+          </FlavorTextContainer>
+          <Block title={'타입'}>
+            <TypesContainer>
+              {detailData.types.map((type: string) => (
+                <TypeBadge name={type} color={convert.typeColor(type)} />
+              ))}
+            </TypesContainer>
+          </Block>
+          <ColorBlock title="스펙" type={detailData.types[0]}>
+            <Stats data={detailData.specs} />
+          </ColorBlock>
+          <ColorBlock title="스탯" type={detailData.types[0]}>
+            <Stats data={detailData.stats} />
+          </ColorBlock>
+        </ScrollView>
+      </Container>
+    );
+  }
 };
 
 export default Detail;

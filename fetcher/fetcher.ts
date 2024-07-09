@@ -6,7 +6,7 @@ const fetchPokemon = async (nameOrId: string | number) => {
   return response.json();
 };
 
-const fetchPokemonSpecies = async (nameOrId: string | number) => {
+const fetchSpecies = async (nameOrId: string | number) => {
   const response = await fetch(
     `https://pokeapi.co/api/v2/pokemon-species/${nameOrId}`,
   );
@@ -16,4 +16,4 @@ const fetchPokemonSpecies = async (nameOrId: string | number) => {
   return response.json();
 };
 
-export {fetchPokemon, fetchPokemonSpecies};
+export {fetchPokemon, fetchSpecies};

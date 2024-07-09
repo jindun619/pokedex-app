@@ -4,3 +4,8 @@ export interface PokemonCardProps {
   name: string;
   types: string[];
 }
+
+export interface StatsItemProps {
+  name: string;
+  value: string | number;
+}

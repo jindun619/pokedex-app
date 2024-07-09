@@ -6,7 +6,7 @@ import styled from 'styled-components/native';
 import {PokemonCardProps} from '../types';
 
 import {PokemonCard} from '../components/PokemonCard';
-import {fetchPokemon, fetchPokemonSpecies} from '../fetcher/fetcher';
+import {fetchPokemon, fetchSpecies} from '../fetcher/fetcher';
 
 const {width: SCREEN_WIDTH} = Dimensions.get('screen');
 
@@ -33,8 +33,8 @@ const Home = () => {
   });
   const pokemonSpeciesData = useQueries({
     queries: ids.map((id: number) => ({
-      queryKey: ['pokemonSpecies', id],
-      queryFn: () => fetchPokemonSpecies(id),
+      queryKey: ['species', id],
+      queryFn: () => fetchSpecies(id),
     })),
   });
 

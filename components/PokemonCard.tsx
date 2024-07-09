@@ -61,7 +61,7 @@ const PokemonCard = ({id, image, name, types}: PokemonCardProps) => {
 
   return (
     <Card
-      onPress={() => navigation.navigate('Detail', {id: 1})}
+      onPress={() => navigation.navigate('Detail', {id: id})}
       color={convert.typeColor(types[0])}>
       <Index>#{id}</Index>
       <ImageWrapper>
