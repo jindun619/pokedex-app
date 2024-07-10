@@ -5,7 +5,7 @@ import Detail from '../screen/Detail';
 
 export type RootNavParamList = {
   Tab: undefined;
-  Detail: {id: number};
+  Detail: {id: number | string};
 };
 
 const Stack = createStackNavigator<RootNavParamList>();

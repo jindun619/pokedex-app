@@ -16,4 +16,12 @@ const fetchSpecies = async (nameOrId: string | number) => {
   return response.json();
 };
 
-export {fetchPokemon, fetchSpecies};
+const fetchSomething = async (url: string) => {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error('Network response was not ok');
+  }
+  return response.json();
+};
+
+export {fetchPokemon, fetchSpecies, fetchSomething};

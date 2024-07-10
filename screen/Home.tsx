@@ -6,7 +6,7 @@ import styled from 'styled-components/native';
 import {PokemonCardProps} from '../types';
 
 import {PokemonCard} from '../components/PokemonCard';
-import {fetchPokemon, fetchSpecies} from '../fetcher/fetcher';
+import {fetchPokemon, fetchSpecies} from '../utils/fetcher';
 
 const {width: SCREEN_WIDTH} = Dimensions.get('screen');
 
@@ -18,7 +18,7 @@ const Container = styled.View`
 `;
 
 const FlatList = styled.FlatList`
-  width: ${SCREEN_WIDTH};
+  width: ${SCREEN_WIDTH}px;
 ` as unknown as typeof RNFlatList;
 
 const Home = () => {

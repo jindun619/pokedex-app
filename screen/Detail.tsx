@@ -14,10 +14,11 @@ import {Stats} from '../components/Stats';
 
 import {RootNavParamList} from '../navigation/RootNav';
 import {convert, translate} from '../utils';
-import {fetchPokemon, fetchSpecies} from '../fetcher/fetcher';
+import {fetchPokemon, fetchSpecies, fetchSomething} from '../utils/fetcher';
 import {StatsItemProps} from '../types';
 
 import {TypeBadge} from '../components/TypeBadge';
+import {MiniCard} from '../components/MiniCard';
 
 const {width: SCREEN_WIDTH} = Dimensions.get('screen');
 
@@ -33,7 +34,7 @@ const Container = styled.View<ContainerProps>`
 `;
 
 const ScrollView = styled.ScrollView`
-  width: ${SCREEN_WIDTH};
+  width: ${SCREEN_WIDTH}px;
   padding: 15px;
   margin-top: 30px;
 `;
@@ -86,6 +87,17 @@ const TypesContainer = styled.View`
   flex-direction: row;
 `;
 
+const EvolutionFlatList = styled.FlatList`
+  padding: 20px;
+`;
+
+const ChevronContainer = styled.View`
+  justify-content: center;
+`;
+const ChevronIcon = styled(Icon)`
+  color: ${props => props.theme.text};
+`;
+
 interface DetailDataProps {
   name: string;
   id: string;
@@ -94,6 +106,7 @@ interface DetailDataProps {
   types: string[];
   specs: StatsItemProps[];
   stats: StatsItemProps[];
+  evolution: string[];
 }
 
 type DetailScreenRouteProp = RouteProp<RootNavParamList, 'Detail'>;
@@ -111,25 +124,40 @@ const Detail = ({route}: DetailProps) => {
   };
 
   const {id} = route.params;
-  const {
-    data: pokemonData,
-    isLoading: pokemonLoading,
-    error: pokemonError,
-  } = useQuery({
+
+  const {data: pokemonData, isLoading: pokemonLoading} = useQuery({
     queryKey: ['pokemon', 'detail', id],
     queryFn: () => fetchPokemon(id),
   });
-  const {
-    data: speciesData,
-    isLoading: speciesLoading,
-    error: speciesError,
-  } = useQuery({
+  const {data: speciesData, isLoading: speciesLoading} = useQuery({
     queryKey: ['species', 'detail', id],
     queryFn: () => fetchSpecies(id),
   });
 
+  const {data: evolutionData, isLoading: evolutionLoading} = useQuery({
+    queryKey: ['evolution', speciesData?.evolution_chain],
+    queryFn: () => fetchSomething(speciesData?.evolution_chain.url),
+    enabled: !!speciesData,
+  });
+
   useEffect(() => {
-    if (!pokemonLoading && !speciesLoading) {
+    if (pokemonData && speciesData && evolutionData) {
+      type EvolutionNode = {
+        species: {name: string};
+        evolves_to: EvolutionNode[];
+      };
+
+      function extractEvolutionChain(data: EvolutionNode): string[] {
+        const chain: string[] = [data.species.name];
+        let current = data.evolves_to[0];
+
+        while (current) {
+          chain.push(current.species.name);
+          current = current.evolves_to[0];
+        }
+        return chain;
+      }
+
       const obj = {
         name: speciesData.names.find((name: any) => name.language.name === 'ko')
           .name,
@@ -149,13 +177,13 @@ const Detail = ({route}: DetailProps) => {
             value: item.base_stat,
           };
         }),
+        evolution: extractEvolutionChain(evolutionData.chain),
       };
       setDetailData(obj);
     }
-  }, [pokemonLoading, speciesLoading]);
+  }, [pokemonLoading, speciesLoading, evolutionLoading]);
 
   if (detailData) {
-    console.log(detailData);
     return (
       <Container color={convert.typeColor(detailData.types[0])}>
         <ScrollView>
@@ -178,7 +206,10 @@ const Detail = ({route}: DetailProps) => {
           <Block title={'타입'}>
             <TypesContainer>
               {detailData.types.map((type: string) => (
-                <TypeBadge name={type} color={convert.typeColor(type)} />
+                <TypeBadge
+                  name={translate.type(type) || ''}
+                  color={convert.typeColor(type)}
+                />
               ))}
             </TypesContainer>
           </Block>
@@ -187,6 +218,18 @@ const Detail = ({route}: DetailProps) => {
           </ColorBlock>
           <ColorBlock title="스탯" type={detailData.types[0]}>
             <Stats data={detailData.stats} />
+          </ColorBlock>
+          <ColorBlock title="진화" type={detailData.types[0]}>
+            <EvolutionFlatList
+              horizontal
+              data={detailData.evolution}
+              renderItem={({item}) => <MiniCard name={item as string} />}
+              ItemSeparatorComponent={() => (
+                <ChevronContainer>
+                  <ChevronIcon name="chevron-right" size={50} />
+                </ChevronContainer>
+              )}
+            />
           </ColorBlock>
         </ScrollView>
       </Container>
