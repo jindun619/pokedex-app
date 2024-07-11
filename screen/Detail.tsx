@@ -1,6 +1,6 @@
-import {useState, useEffect} from 'react';
+import {useState, useEffect, useRef} from 'react';
 
-import {Dimensions} from 'react-native';
+import {Dimensions, ScrollView} from 'react-native';
 
 import styled from 'styled-components/native';
 import {useQuery} from '@tanstack/react-query';
@@ -33,7 +33,7 @@ const Container = styled.View<ContainerProps>`
   align-items: center;
 `;
 
-const ScrollView = styled.ScrollView`
+const StyledScrollView = styled(ScrollView)`
   width: ${SCREEN_WIDTH}px;
   padding: 15px;
   margin-top: 30px;
@@ -140,6 +140,14 @@ const Detail = ({route}: DetailProps) => {
     enabled: !!speciesData,
   });
 
+  const scrollRef = useRef<ScrollView>(null);
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo({x: 0, y: 0});
+    }
+  }, [route]);
+
   useEffect(() => {
     if (pokemonData && speciesData && evolutionData) {
       type EvolutionNode = {
@@ -186,7 +194,7 @@ const Detail = ({route}: DetailProps) => {
   if (detailData) {
     return (
       <Container color={convert.typeColor(detailData.types[0])}>
-        <ScrollView>
+        <StyledScrollView ref={scrollRef}>
           <NameText>{detailData.name}</NameText>
           <IndexText>{detailData.id}번째 포켓몬</IndexText>
           <ImageContainer>
@@ -207,6 +215,7 @@ const Detail = ({route}: DetailProps) => {
             <TypesContainer>
               {detailData.types.map((type: string) => (
                 <TypeBadge
+                  key={type}
                   name={translate.type(type) || ''}
                   color={convert.typeColor(type)}
                 />
@@ -231,7 +240,7 @@ const Detail = ({route}: DetailProps) => {
               )}
             />
           </ColorBlock>
-        </ScrollView>
+        </StyledScrollView>
       </Container>
     );
   }

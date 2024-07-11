@@ -12,9 +12,9 @@ const Stack = createStackNavigator<RootNavParamList>();
 
 function RootNav() {
   return (
-    <Stack.Navigator screenOptions={{headerShown: false}}>
-      <Stack.Screen name="Tab" component={Tabs} />
-      <Stack.Screen name="Detail" component={Detail} />
+    <Stack.Navigator screenOptions={{headerShown: true}}>
+      <Stack.Screen name="Tab" component={Tabs} options={{title: '홈'}} />
+      <Stack.Screen name="Detail" component={Detail} options={{title: ''}} />
     </Stack.Navigator>
   );
 }

@@ -18,7 +18,7 @@ const App = () => {
   const [appTheme, setAppTheme] = useState('light');
 
   useEffect(() => {
-    Appearance.addChangeListener(({colorScheme}) => {
+    Appearance.addChangeListener(() => {
       setAppTheme(Appearance.getColorScheme() === 'dark' ? 'dark' : 'light');
       return () => {};
     });
