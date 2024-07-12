@@ -7,6 +7,7 @@ import {PokemonCardProps} from '../types';
 
 import {PokemonCard} from '../components/PokemonCard';
 import {fetchPokemon, fetchSpecies} from '../utils/fetcher';
+import {Loading} from '../components/Loading';
 
 const {width: SCREEN_WIDTH} = Dimensions.get('screen');
 
@@ -55,12 +56,18 @@ const Home = () => {
   });
 
   const onEndReached = () => {
-    if (pokemonHasNextPage) {
+    if (pokemonHasNextPage && speciesHasNextPage) {
       pokemonFetchNextPage();
       speciesFetchNextPage();
     }
   };
 
+  useEffect(() => {
+    if (pokemonData?.pages.length === 1) {
+      pokemonFetchNextPage();
+      speciesFetchNextPage();
+    }
+  }, [pokemonData]);
   useEffect(() => {
     if (pokemonData && speciesData) {
       const arr: PokemonCardProps[] = [];
@@ -82,33 +89,27 @@ const Home = () => {
     }
   }, [pokemonData, speciesData]);
 
-  useEffect(() => {
-    console.log('--------');
-  }, []);
-
-  useEffect(() => {
-    if (totalData) {
-      console.log(totalData);
-    }
-  }, [totalData]);
-
   return (
     <Container>
-      <FlatList
-        data={totalData}
-        keyExtractor={(item: PokemonCardProps) => item.id.toString()}
-        renderItem={({item}: {item: PokemonCardProps}) => (
-          <PokemonCard
-            id={item.id}
-            name={item.name}
-            image={item.image}
-            types={item.types}
-          />
-        )}
-        onEndReached={onEndReached}
-        onEndReachedThreshold={0.75}
-        contentContainerStyle={{alignItems: 'center', marginTop: 20}}
-      />
+      {totalData ? (
+        <FlatList
+          data={totalData}
+          keyExtractor={(item: PokemonCardProps) => item.id.toString()}
+          renderItem={({item}: {item: PokemonCardProps}) => (
+            <PokemonCard
+              id={item.id}
+              name={item.name}
+              image={item.image}
+              types={item.types}
+            />
+          )}
+          onEndReached={onEndReached}
+          onEndReachedThreshold={0.1}
+          contentContainerStyle={{alignItems: 'center', marginTop: 20}}
+        />
+      ) : (
+        <Loading />
+      )}
     </Container>
   );
 };

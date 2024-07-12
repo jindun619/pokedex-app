@@ -19,6 +19,7 @@ import {StatsItemProps} from '../types';
 
 import {TypeBadge} from '../components/TypeBadge';
 import {MiniCard} from '../components/MiniCard';
+import {Loading} from '../components/Loading';
 
 const {width: SCREEN_WIDTH} = Dimensions.get('screen');
 
@@ -243,6 +244,8 @@ const Detail = ({route}: DetailProps) => {
         </StyledScrollView>
       </Container>
     );
+  } else {
+    return <Loading />;
   }
 };
 
