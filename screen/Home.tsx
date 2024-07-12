@@ -1,6 +1,6 @@
-import {useState, useEffect, useMemo} from 'react';
+import {useState, useEffect} from 'react';
 import {Dimensions, FlatList as RNFlatList} from 'react-native';
-import {useQueries} from '@tanstack/react-query';
+import {useInfiniteQuery} from '@tanstack/react-query';
 import styled from 'styled-components/native';
 
 import {PokemonCardProps} from '../types';
@@ -24,51 +24,73 @@ const FlatList = styled.FlatList`
 const Home = () => {
   const [totalData, setTotalData] = useState<PokemonCardProps[]>([]);
 
-  const ids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-  const pokemonData = useQueries({
-    queries: ids.map((id: number) => ({
-      queryKey: ['pokemon', id],
-      queryFn: () => fetchPokemon(id),
-    })),
-  });
-  const pokemonSpeciesData = useQueries({
-    queries: ids.map((id: number) => ({
-      queryKey: ['species', id],
-      queryFn: () => fetchSpecies(id),
-    })),
+  const {
+    data: pokemonData,
+    hasNextPage: pokemonHasNextPage,
+    fetchNextPage: pokemonFetchNextPage,
+  } = useInfiniteQuery({
+    queryKey: ['pokemon'],
+    queryFn: ({pageParam}) => {
+      return fetchPokemon(pageParam);
+    },
+    initialPageParam: 1,
+    getNextPageParam: (_, pages) => {
+      return pages.length + 1;
+    },
   });
 
-  const pokemonDataLoading: boolean = useMemo(
-    () => pokemonData.some(query => query.isLoading),
-    [pokemonData],
-  );
-  const pokemonSpeciesDataLoading: boolean = useMemo(
-    () => pokemonSpeciesData.some(query => query.isLoading),
-    [pokemonSpeciesData],
-  );
+  const {
+    data: speciesData,
+    hasNextPage: speciesHasNextPage,
+    fetchNextPage: speciesFetchNextPage,
+  } = useInfiniteQuery({
+    queryKey: ['species'],
+    queryFn: ({pageParam}) => {
+      return fetchSpecies(pageParam);
+    },
+    initialPageParam: 1,
+    getNextPageParam: (_, pages) => {
+      return pages.length + 1;
+    },
+  });
+
+  const onEndReached = () => {
+    if (pokemonHasNextPage) {
+      pokemonFetchNextPage();
+      speciesFetchNextPage();
+    }
+  };
 
   useEffect(() => {
-    if (!pokemonDataLoading && !pokemonSpeciesDataLoading) {
+    if (pokemonData && speciesData) {
       const arr: PokemonCardProps[] = [];
-      pokemonData.forEach((pokemonQuery, index) => {
-        const speciesQuery = pokemonSpeciesData[index];
-        if ((pokemonQuery.data, speciesQuery.data)) {
+      pokemonData.pages.forEach((pokemonQuery, index) => {
+        const speciesQuery = speciesData.pages[index];
+        if (pokemonQuery && speciesQuery) {
           const obj = {
-            id: pokemonData[index].data.id,
-            name: pokemonSpeciesData[index].data.names.find(
+            id: pokemonQuery.id,
+            name: speciesQuery.names.find(
               (name: any) => name.language.name === 'ko',
             ).name,
-            types: pokemonData[index].data.types.map(
-              (type: any) => type.type.name,
-            ),
-            image: pokemonData[index].data.sprites.front_default,
+            types: pokemonQuery.types.map((type: any) => type.type.name),
+            image: pokemonQuery.sprites.front_default,
           };
           arr.push(obj);
         }
       });
       setTotalData(arr);
     }
-  }, [pokemonDataLoading, pokemonSpeciesDataLoading]);
+  }, [pokemonData, speciesData]);
+
+  useEffect(() => {
+    console.log('--------');
+  }, []);
+
+  useEffect(() => {
+    if (totalData) {
+      console.log(totalData);
+    }
+  }, [totalData]);
 
   return (
     <Container>
@@ -83,6 +105,8 @@ const Home = () => {
             types={item.types}
           />
         )}
+        onEndReached={onEndReached}
+        onEndReachedThreshold={0.75}
         contentContainerStyle={{alignItems: 'center', marginTop: 20}}
       />
     </Container>

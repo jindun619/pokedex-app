@@ -7,6 +7,7 @@ import {
   NavigationContainer,
 } from '@react-navigation/native';
 import {QueryClientProvider, QueryClient} from '@tanstack/react-query';
+import {ReactQueryDevtools} from '@tanstack/react-query-devtools';
 import {ThemeProvider} from 'styled-components';
 
 import {light, dark} from './theme';
