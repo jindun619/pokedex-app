@@ -4,7 +4,7 @@ import styled from 'styled-components/native';
 import {useNavigation} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
 
-import {PokemonCardProps} from '../types';
+import {LargeCardProps} from '../types';
 import {RootNavParamList} from '../navigation/RootNav';
 
 import {TypeBadge} from './TypeBadge';
@@ -31,7 +31,7 @@ const Index = styled.Text`
   font-style: italic;
 `;
 
-const NameText = styled.Text`
+const Name = styled.Text`
   color: ${props => props.theme.text};
   font-size: 30px;
   font-weight: 600;
@@ -51,12 +51,12 @@ const TypesContainer = styled.View`
   flex-direction: row;
 `;
 
-type DetailScreenNavigationProp = StackNavigationProp<
+export type DetailScreenNavigationProp = StackNavigationProp<
   RootNavParamList,
   'Detail'
 >;
 
-const PokemonCard = ({id, image, name, types}: PokemonCardProps) => {
+const LargeCard = ({id, image, name, types}: LargeCardProps) => {
   const navigation = useNavigation<DetailScreenNavigationProp>();
 
   return (
@@ -69,7 +69,7 @@ const PokemonCard = ({id, image, name, types}: PokemonCardProps) => {
       <ImageWrapper>
         <Image source={{uri: image}} />
       </ImageWrapper>
-      <NameText>{name}</NameText>
+      <Name>{name}</Name>
       <TypesContainer>
         {types.map((type: any) => (
           <TypeBadge
@@ -83,4 +83,4 @@ const PokemonCard = ({id, image, name, types}: PokemonCardProps) => {
   );
 };
 
-export {PokemonCard};
+export {LargeCard};

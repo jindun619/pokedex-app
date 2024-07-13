@@ -1,7 +1,9 @@
 import styled from 'styled-components/native';
 
 const Badge = styled.View<{color: string}>`
-  width: 50%;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
   margin-right: 2px;
   margin-bottom: 5px;
   border-radius: 7px;

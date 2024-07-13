@@ -3,9 +3,9 @@ import {Dimensions, FlatList as RNFlatList} from 'react-native';
 import {useInfiniteQuery} from '@tanstack/react-query';
 import styled from 'styled-components/native';
 
-import {PokemonCardProps} from '../types';
+import {LargeCardProps} from '../types';
 
-import {PokemonCard} from '../components/PokemonCard';
+import {LargeCard} from '../components/LargeCard';
 import {fetchPokemon, fetchSpecies} from '../utils/fetcher';
 import {Loading} from '../components/Loading';
 
@@ -23,7 +23,7 @@ const FlatList = styled.FlatList`
 ` as unknown as typeof RNFlatList;
 
 const Home = () => {
-  const [totalData, setTotalData] = useState<PokemonCardProps[]>([]);
+  const [totalData, setTotalData] = useState<LargeCardProps[]>([]);
 
   const {
     data: pokemonData,
@@ -70,7 +70,7 @@ const Home = () => {
   }, [pokemonData]);
   useEffect(() => {
     if (pokemonData && speciesData) {
-      const arr: PokemonCardProps[] = [];
+      const arr: LargeCardProps[] = [];
       pokemonData.pages.forEach((pokemonQuery, index) => {
         const speciesQuery = speciesData.pages[index];
         if (pokemonQuery && speciesQuery) {
@@ -94,9 +94,9 @@ const Home = () => {
       {totalData ? (
         <FlatList
           data={totalData}
-          keyExtractor={(item: PokemonCardProps) => item.id.toString()}
-          renderItem={({item}: {item: PokemonCardProps}) => (
-            <PokemonCard
+          keyExtractor={(item: LargeCardProps) => item.id.toString()}
+          renderItem={({item}: {item: LargeCardProps}) => (
+            <LargeCard
               id={item.id}
               name={item.name}
               image={item.image}
