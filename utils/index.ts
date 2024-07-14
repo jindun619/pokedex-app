@@ -78,4 +78,8 @@ const convert = {
   },
 };
 
-export {translate, convert};
+const getTotalQuantity = () => {
+  return 1025;
+};
+
+export {translate, convert, getTotalQuantity};

@@ -6,15 +6,16 @@ import {
   useQueries,
   useQueryClient,
 } from '@tanstack/react-query';
+import * as Progress from 'react-native-progress';
 
 import {useTheme} from 'styled-components/native';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 
 import {MediumCard} from '../components/MediumCard';
 import {MediumCardProps} from '../types';
-import {useEffect} from 'react';
+import {useEffect, useState} from 'react';
 import {fetchPokemon, fetchSpecies} from '../utils/fetcher';
-import {hasteMapCacheDirectory} from '../metro.config';
+import {getTotalQuantity} from '../utils';
 
 const Button = styled.TouchableOpacity``;
 const ButtonText = styled.Text``;
@@ -22,6 +23,23 @@ const Container = styled.View`
   flex: 1;
   padding: 10px;
   background-color: ${props => props.theme.mainBg};
+`;
+const ProgressContainer = styled.View`
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+`;
+const ProgressText = styled.Text`
+  color: ${props => props.theme.text};
+  font-size: 24px;
+  font-weight: 500;
+  margin-bottom: 20px;
+`;
+const ProgressTextNeutral = styled.Text`
+  color: ${props => props.theme.neutral};
+  font-size: 20px;
+  font-weight: 500;
+  margin-top: 20px;
 `;
 const SearchBar = styled.View`
   flex-direction: row;
@@ -52,9 +70,14 @@ const ItemSeparator = styled.View`
   height: 10px;
 `;
 
+const TOTAL_QUANTITY = getTotalQuantity();
+
 const Search = () => {
   const queryClient = useQueryClient();
   const theme = useTheme();
+
+  const [pokemonLoaded, setPokemonLoaded] = useState<Boolean>(false);
+  const [speciesLoaded, setSpeciesLoaded] = useState<Boolean>(false);
 
   const tmpData = [
     {
@@ -87,55 +110,65 @@ const Search = () => {
     },
   ];
 
-  const {data, isLoading, hasNextPage, fetchNextPage} = useInfiniteQuery({
-    queryKey: ['aaa'],
+  const {
+    data: pokemonData,
+    isLoading: pokemonLoading,
+    hasNextPage: pokemonHasNextPage,
+    fetchNextPage: pokemonFetchNextPage,
+  } = useInfiniteQuery({
+    queryKey: ['pokemon'],
     queryFn: async ({pageParam}) => {
-      const cachedData = queryClient.getQueryData(['aaa', pageParam]);
+      const cachedData = queryClient.getQueryData(['pokemon', pageParam]);
       if (cachedData) {
-        console.log('cachedData exists!');
         return cachedData;
-      } else {
-        console.log("cachedData doesn't exist!");
       }
       return fetchPokemon(pageParam);
     },
     initialPageParam: 1,
-    getNextPageParam: (_, pages) => pages.length + 1,
+    getNextPageParam: (_, pages) => {
+      const nextPage = pages.length + 1;
+      return nextPage <= TOTAL_QUANTITY ? nextPage : undefined;
+    },
+  });
+  const {
+    data: speciesData,
+    isLoading: speciesLoading,
+    hasNextPage: speciesHasNextPage,
+    fetchNextPage: speciesFetchNextPage,
+  } = useInfiniteQuery({
+    queryKey: ['species'],
+    queryFn: async ({pageParam}) => {
+      const cachedData = queryClient.getQueryData(['species', pageParam]);
+      if (cachedData) {
+        return cachedData;
+      }
+      return fetchSpecies(pageParam);
+    },
+    initialPageParam: 1,
+    getNextPageParam: (_, pages) => {
+      const nextPage = pages.length + 1;
+      return nextPage <= TOTAL_QUANTITY ? nextPage : undefined;
+    },
   });
 
   useEffect(() => {
-    if (!isLoading && hasNextPage) {
-      fetchNextPage();
+    if (pokemonHasNextPage) {
+      pokemonFetchNextPage();
+    } else if (!pokemonLoading) {
+      setPokemonLoaded(true);
     }
-    if (!hasNextPage) {
-      console.log('no more page');
+  }, [pokemonData, pokemonLoading, pokemonHasNextPage]);
+  useEffect(() => {
+    if (speciesHasNextPage) {
+      speciesFetchNextPage();
+    } else if (!speciesLoading) {
+      setSpeciesLoaded(true);
     }
-  }, [data, isLoading, hasNextPage]);
+  }, [speciesData, speciesLoading, speciesHasNextPage]);
 
   return (
     <Container>
-      <Button
-        onPress={() => {
-          fetchNextPage();
-        }}>
-        <ButtonText>Load More</ButtonText>
-      </Button>
-      <Button
-        onPress={() => {
-          queryClient.removeQueries();
-        }}>
-        <ButtonText>Clear Queries</ButtonText>
-      </Button>
-      <Button
-        onPress={() => {
-          console.log(data?.pages.length);
-          data?.pages.map(page => {
-            console.log(page.name);
-          });
-        }}>
-        <ButtonText>Current Data</ButtonText>
-      </Button>
-      <ButtonText>{data?.pages.length}</ButtonText>
+      <ButtonText>{pokemonData?.pages.length}</ButtonText>
       <SearchBar>
         <SearchButton>
           <SearchIcon name="search" />
@@ -146,21 +179,37 @@ const Search = () => {
           returnKeyType="search"
         />
       </SearchBar>
-      <CardsContainer
-        data={tmpData}
-        renderItem={({item}: {item: MediumCardProps}) => (
-          <MediumCard
-            key={item.id}
-            id={item.id}
-            name={item.name}
-            image={item.image}
-            types={item.types}
+      {!pokemonLoaded || !speciesLoaded ? (
+        <ProgressContainer>
+          <ProgressText>데이터를 불러오는 중..</ProgressText>
+          <Progress.Bar
+            progress={
+              pokemonData ? pokemonData?.pages.length / TOTAL_QUANTITY : 0
+            }
+            width={250}
+            height={15}
           />
-        )}
-        ItemSeparatorComponent={() => <ItemSeparator />}
-        numColumns={2}
-        columnWrapperStyle={{justifyContent: 'space-between'}}
-      />
+          <ProgressTextNeutral>
+            빨리 가져오는 법 아는분 알려주세요..ㅠ
+          </ProgressTextNeutral>
+        </ProgressContainer>
+      ) : (
+        <CardsContainer
+          data={tmpData}
+          renderItem={({item}: {item: MediumCardProps}) => (
+            <MediumCard
+              key={item.id}
+              id={item.id}
+              name={item.name}
+              image={item.image}
+              types={item.types}
+            />
+          )}
+          ItemSeparatorComponent={() => <ItemSeparator />}
+          numColumns={2}
+          columnWrapperStyle={{justifyContent: 'space-between'}}
+        />
+      )}
     </Container>
   );
 };
